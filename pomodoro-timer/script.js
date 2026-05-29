@@ -1,9 +1,3 @@
-const MODES = {
-  focus: { label: 'Deep work session', duration: 25 * 60 },
-  short: { label: 'Short break — breathe', duration: 5 * 60 },
-  long:  { label: 'Long break — recharge', duration: 15 * 60 }
-};
-
 const TIPS = [
   "Turn off notifications during focus time.",
   "Drink water before your session starts.",
@@ -12,8 +6,16 @@ const TIPS = [
   "Stand up and stretch during your break.",
   "Your brain needs rest to retain information.",
   "Consistency beats intensity — show up daily.",
-  "Close unused tabs to reduce distractions."
+  "Close unused tabs to reduce distractions.",
+  "Sleep is when memories are consolidated.",
+  "Set a clear goal before each session."
 ];
+
+let MODES = {
+  focus: { label: 'Deep work session', duration: 25 * 60 },
+  short: { label: 'Short break — breathe', duration: 5 * 60 },
+  long:  { label: 'Long break — recharge', duration: 15 * 60 }
+};
 
 let currentMode = 'focus';
 let timeLeft = MODES.focus.duration;
@@ -22,6 +24,7 @@ let timerInterval = null;
 let isRunning = false;
 let sessionCount = 0;
 let totalFocusMinutes = 0;
+
 let streak = parseInt(localStorage.getItem('pomStreak') || '0');
 let lastDate = localStorage.getItem('pomLastDate') || '';
 
@@ -31,12 +34,33 @@ function init() {
   updateDisplay();
   updateProgressBar();
   setTodayDate();
+
+  const ti = document.getElementById('taskInput');
+  ti.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') saveTask();
+    if (e.key === 'Escape') cancelTask();
+  });
+  ti.addEventListener('blur', saveTask);
 }
 
 function setTodayDate() {
   const d = new Date();
   const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   document.getElementById('todayDate').textContent = d.toLocaleDateString('en-US', opts);
+}
+
+function applySettings() {
+  if (isRunning) return;
+  const f = parseInt(document.getElementById('setFocus').value) || 25;
+  const s = parseInt(document.getElementById('setShort').value) || 5;
+  const l = parseInt(document.getElementById('setLong').value) || 15;
+  MODES.focus.duration = Math.max(1, f) * 60;
+  MODES.short.duration = Math.max(1, s) * 60;
+  MODES.long.duration  = Math.max(1, l) * 60;
+  timeLeft = MODES[currentMode].duration;
+  totalTime = MODES[currentMode].duration;
+  updateDisplay();
+  updateProgressBar();
 }
 
 function switchMode(mode) {
@@ -64,11 +88,14 @@ function startTimer() {
   btn.classList.add('running');
 
   timerInterval = setInterval(() => {
-    timeLeft--;
-    updateDisplay();
-    updateProgressBar();
+    if (timeLeft > 0) {
+      timeLeft--;
+      updateDisplay();
+      updateProgressBar();
+    }
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
+      timerInterval = null;
       isRunning = false;
       onSessionEnd();
     }
@@ -77,6 +104,7 @@ function startTimer() {
 
 function pauseTimer() {
   clearInterval(timerInterval);
+  timerInterval = null;
   isRunning = false;
   const btn = document.getElementById('startBtn');
   btn.textContent = 'Resume';
@@ -85,6 +113,7 @@ function pauseTimer() {
 
 function resetTimer() {
   clearInterval(timerInterval);
+  timerInterval = null;
   isRunning = false;
   timeLeft = MODES[currentMode].duration;
   totalTime = MODES[currentMode].duration;
@@ -97,6 +126,7 @@ function resetTimer() {
 
 function skipSession() {
   clearInterval(timerInterval);
+  timerInterval = null;
   isRunning = false;
   onSessionEnd();
 }
@@ -107,10 +137,11 @@ function onSessionEnd() {
   btn.classList.remove('running');
 
   addLog(currentMode);
+  playSound();
 
   if (currentMode === 'focus') {
     sessionCount++;
-    totalFocusMinutes += 25;
+    totalFocusMinutes += Math.round(MODES.focus.duration / 60);
     document.getElementById('sessionCount').textContent = sessionCount;
     document.getElementById('totalFocus').textContent = totalFocusMinutes + 'm';
     updateStreak();
@@ -118,9 +149,7 @@ function onSessionEnd() {
   } else {
     switchMode('focus');
   }
-
   showTip();
-  playSound();
 }
 
 function updateDisplay() {
@@ -131,7 +160,7 @@ function updateDisplay() {
 }
 
 function updateProgressBar() {
-  const pct = (timeLeft / totalTime) * 100;
+  const pct = totalTime > 0 ? (timeLeft / totalTime) * 100 : 0;
   document.getElementById('progressBar').style.width = pct + '%';
 }
 
@@ -156,48 +185,56 @@ function addLog(mode) {
   const li = document.createElement('li');
   const label = mode === 'focus' ? 'Focus' : mode === 'short' ? 'Short' : 'Long';
   const tagClass = mode === 'focus' ? '' : 'break';
-  li.innerHTML = `<span>${time}</span><span class="log-tag ${tagClass}">${label}</span>`;
+  li.innerHTML = '<span>' + time + '</span><span class="log-tag ' + tagClass + '">' + label + '</span>';
   list.insertBefore(li, list.firstChild);
-
-  if (list.children.length > 6) list.lastChild.remove();
+  if (list.children.length > 7) list.removeChild(list.lastChild);
 }
 
 function editTask() {
   const input = document.getElementById('taskInput');
   const text = document.getElementById('taskText');
+  const def = 'Click to set your task';
+  input.value = text.textContent === def ? '' : text.textContent;
   input.classList.remove('hidden');
   text.classList.add('hidden');
-  input.value = text.textContent === 'Click edit to set your task' ? '' : text.textContent;
   input.focus();
 }
 
-function saveTask(e) {
-  if (e.key === 'Enter') {
-    const input = document.getElementById('taskInput');
-    const text = document.getElementById('taskText');
-    text.textContent = input.value || 'Click edit to set your task';
-    input.classList.add('hidden');
-    text.classList.remove('hidden');
-  }
+function saveTask() {
+  const input = document.getElementById('taskInput');
+  const text = document.getElementById('taskText');
+  const val = input.value.trim();
+  text.textContent = val || 'Click to set your task';
+  input.classList.add('hidden');
+  text.classList.remove('hidden');
+}
+
+function cancelTask() {
+  document.getElementById('taskInput').classList.add('hidden');
+  document.getElementById('taskText').classList.remove('hidden');
 }
 
 function showTip() {
-  const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
-  document.getElementById('tipBox').textContent = '"' + tip + '"';
+  document.getElementById('tipBox').textContent = '"' + TIPS[Math.floor(Math.random() * TIPS.length)] + '"';
 }
 
 function playSound() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.frequency.setValueAtTime(880, ctx.currentTime);
-  osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.4);
+  if (!document.getElementById('soundToggle').checked) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15);
+    osc.frequency.setValueAtTime(770, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.6);
+  } catch(e) {}
 }
 
 init();

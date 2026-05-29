@@ -8,10 +8,9 @@
 </head>
 <body>
   <div class="page">
-
     <header class="masthead">
       <div class="masthead-top">
-        <span class="edition"></span>
+        <span class="edition">Vol. III — Session Tracker</span>
         <span class="date" id="todayDate"></span>
       </div>
       <h1 class="newspaper-title">The Pomodoro</h1>
@@ -27,24 +26,87 @@
     </div>
 
     <main class="layout">
-
       <section class="timer-col">
         <div class="col-head">CURRENT SESSION</div>
         <div class="big-time" id="timeDisplay">25:00</div>
         <div class="mode-line" id="modeLabel">Deep work session</div>
-
         <div class="progress-bar-wrap">
           <div class="progress-bar-fill" id="progressBar"></div>
         </div>
-
         <div class="controls">
           <button class="ctrl-icon" onclick="resetTimer()" title="Reset">↺</button>
           <button class="main-btn" id="startBtn" onclick="toggleTimer()">Start</button>
           <button class="ctrl-icon" onclick="skipSession()" title="Skip">⏭</button>
         </div>
-
         <div class="task-block">
           <div class="task-label">CURRENT TASK</div>
-          <div class="task-text" id="taskText">Click edit to set your task</div>
-          <input class="task-input hidden" id="taskInput" placeholder="What are you working on?" onkeydown="saveTask(event)" />
-          <button
+          <div class="task-wrap">
+            <div class="task-text" id="taskText" onclick="editTask()">Click to set your task</div>
+            <input class="task-input hidden" id="taskInput" placeholder="What are you working on?" />
+            <button class="task-edit-btn" onclick="editTask()">Edit</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-col">
+        <div class="col-head">TODAY'S RECORD</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <div class="stat-num" id="sessionCount">0</div>
+            <div class="stat-label">Sessions Done</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-num" id="totalFocus">0m</div>
+            <div class="stat-label">Total Focus</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-num" id="streakCount">0</div>
+            <div class="stat-label">Day Streak</div>
+          </div>
+        </div>
+
+        <div class="section-rule"></div>
+        <div class="col-head">TIMER SETTINGS</div>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <div class="setting-lbl">FOCUS (MIN)</div>
+            <input class="setting-input" type="number" id="setFocus" value="25" min="1" max="90">
+          </div>
+          <div class="setting-item">
+            <div class="setting-lbl">SHORT (MIN)</div>
+            <input class="setting-input" type="number" id="setShort" value="5" min="1" max="30">
+          </div>
+          <div class="setting-item" style="grid-column:1/-1">
+            <div class="setting-lbl">LONG (MIN)</div>
+            <input class="setting-input" type="number" id="setLong" value="15" min="1" max="60">
+          </div>
+        </div>
+        <button class="apply-btn" onclick="applySettings()">APPLY SETTINGS</button>
+
+        <div class="sound-row">
+          <input type="checkbox" id="soundToggle" checked>
+          <label for="soundToggle">Sound notifications</label>
+        </div>
+
+        <div class="section-rule"></div>
+        <div class="col-head">STUDY TIP</div>
+        <div class="tip-text" id="tipBox">Loading tip...</div>
+
+        <div class="section-rule"></div>
+        <div class="col-head">SESSION LOG</div>
+        <ul class="log-list" id="logList">
+          <li class="log-empty">No sessions yet today.</li>
+        </ul>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>The Pomodoro Times</span>
+      <span>Focus · Rest · Repeat</span>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
