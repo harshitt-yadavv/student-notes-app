@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pomodoro Timer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="wrapper">
+    <h1 class="title">Pomodoro Timer</h1>
+    <p class="subtitle">Stay focused. Study smarter.</p>
+
+    <!-- Mode Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tab-focus" onclick="switchMode('focus')">Focus</button>
+      <button class="tab" id="tab-short" onclick="switchMode('short')">Short Break</button>
+      <button class="tab" id="tab-long" onclick="switchMode('long')">Long Break</button>
+    </div>
+
+    <!-- Timer Card -->
+    <div class="timer-card">
+
+      <!-- Circular Progress -->
+      <div class="circle-wrapper">
+        <svg class="progress-ring" viewBox="0 0 200 200">
+          <circle class="ring-bg" cx="100" cy="100" r="85"/>
+          <circle class="ring-fill" id="ringFill" cx="100" cy="100" r="85"/>
+        </svg>
+        <div class="timer-display">
+          <div class="time" id="timeDisplay">25:00</div>
+          <div class="mode-label" id="modeLabel">Focus Time</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="ctrl-btn" onclick="resetTimer()" title="Reset">↺</button>
+        <button class="start-btn" id="startBtn" onclick="toggleTimer()">Start</button>
+        <button class="ctrl-btn" onclick="skipSession()" title="Skip">⏭</button>
+      </div>
+
+    </div>
+
+    <!-- Session Info -->
+    <div class="session-info">
+      <div class="info-box">
+        <div class="info-num" id="sessionCount">0</div>
+        <div class="info-label">Sessions Done</div>
+      </div>
+      <div class="info-box">
+        <div class="info-num" id="totalFocus">0m</div>
+        <div class="info-label">Total Focus</div>
+      </div>
+      <div class="info-box">
+        <div class="info-num" id="streakCount">0</div>
+        <div class="info-label">Day Streak</div>
+      </div>
+    </div>
+
+    <!-- Task Box -->
+    <div class="task-box">
+      <div class="task-header">
+        <span>Current Task</span>
+        <button class="edit-btn" onclick="editTask()">Edit</button>
+      </div>
+      <div class="task-text" id="taskText">Click Edit to set your task</div>
+      <input class="task-input hidden" id="taskInput" placeholder="What are you working on?" onkeydown="saveTask(event)" />
+    </div>
+
+    <!-- Tips -->
+    <div class="tip-box" id="tipBox"></div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
